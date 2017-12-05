@@ -1,105 +1,97 @@
 package com.simon.bigfiledownload;
 
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-
-    private String mCurrentPhotoPath;
-    private static final int REQUEST_TAKE_PHOTO = 1;
+   private RecyclerView mRecyclerView;
+   private ArrayList<String> downloadTasks;
+   private LinearLayoutManager mLayoutManager;
+   private MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-              /*  BigFileDownManager.getInstance().setTargetFolder(Environment.getExternalStorageDirectory().getPath()+ File.separator+"ac");
-                BigFileDownManager.getInstance().addTask("http://172.16.1.148:8080/test_down/2017_11_22_ninemath.apk");*/
-                takePhoto();
-            }
-        });
+        mRecyclerView =findViewById(R.id.rv_list);
+        downloadTasks=new ArrayList();
+        downloadTasks.add("a");
+        downloadTasks.add("b");
+        downloadTasks.add("c");
+        downloadTasks.add("d");
+        mLayoutManager=new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        myAdapter =new MyAdapter(downloadTasks);
+        mRecyclerView.setAdapter(myAdapter);
     }
 
-    private void takePhoto() {
-        if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            // Ensure that there's a camera activity to handle the intent
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                // Create the File where the photo should go
-                File photoFile = null;
-                try {
-                    photoFile = createImageFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // Error occurred while creating the File
-                }
-                // Continue only if the File was successfully created
-                if (photoFile != null) {
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
-                            Uri.fromFile(photoFile));
-                    startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-                }
-            }
+
+   public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
+       ArrayList<String> downloadTasks;
+
+       public MyAdapter(ArrayList<String> downloadTasks) {
+           if(downloadTasks==null){
+               downloadTasks=new ArrayList<>();
+           }
+           this.downloadTasks = downloadTasks;
+       }
+
+       public  class ViewHolder extends RecyclerView.ViewHolder{
+            private ProgressBar progressBar;
+            private TextView tvName;
+            private Button btnStart;
+            private Button btnPause;
+           public ViewHolder(View itemView) {
+               super(itemView);
+               progressBar=itemView.findViewById(R.id.pb_progress);
+               tvName=itemView.findViewById(R.id.tv_name);
+               btnStart=itemView.findViewById(R.id.btn_start);
+               btnPause=itemView.findViewById(R.id.btn_pause);
+           }
+
+           public void bind(String url){
+               tvName.setText(url);
+               btnStart.setOnClickListener(new View.OnClickListener() {
+                   @Override
+                   public void onClick(View view) {
+
+                   }
+               });
+
+               btnPause.setOnClickListener(new View.OnClickListener() {
+                   @Override
+                   public void onClick(View view) {
+
+                   }
+               });
+           }
         }
-    }
 
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-
-        File storageDir=getStorageDir("pic");
-        if(!storageDir.exists()){
-            storageDir.mkdir();
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.item_layout,parent,false);
+            ViewHolder viewHolder=new ViewHolder(view);
+            return viewHolder;
         }
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
 
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = "file:" + image.getAbsolutePath();
-        return image;
-    }
-
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.bind(downloadTasks.get(position));
         }
-        return false;
-    }
 
-    public File getStorageDir(String albumName) {
-        // Get the directory for the user's public pictures directory.
-        File file = new File(Environment.getExternalStorageDirectory(), albumName);
-        if (!file.mkdirs()) {
-            Log.e("", "Directory not created");
+        @Override
+        public int getItemCount() {
+            return downloadTasks.size();
         }
-        return file;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-         File file=new File(mCurrentPhotoPath);
-         boolean exists = file.exists();
-      }
     }
 }

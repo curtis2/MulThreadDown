@@ -51,7 +51,6 @@ public class UrlDownLoadTask  implements IDownListener{
                         fileEntity.setTargetFolder(BigFileDownManager.getInstance().getTargetFolder());
                         fileEntity.setTargetPath(BigFileDownManager.getInstance().getTargetFolder()+ File.separator+ Uri.parse(downUrl).getLastPathSegment());
 
-
                         //构建文件
                         File file = new File(fileEntity.getTargetFolder());
                         if(!file.exists()){
@@ -72,8 +71,6 @@ public class UrlDownLoadTask  implements IDownListener{
                     downloadTasks[i]=new DownloadTask(i,fileEntity.getUrl(),startPos,endPos,fileEntity.getTargetPath(),UrlDownLoadTask.this);
                     downloadTasks[i].setName("Thread"+i);
                 }
-
-                startDownload();
             }
         }).start();
     }
@@ -100,7 +97,7 @@ public class UrlDownLoadTask  implements IDownListener{
 
     public  void startDownload() {
         for (int i = 0; i <taskThreadSize; i++){
-             downloadTasks[i].start();
+             BigFileDownManager.getExecutor().execute(downloadTasks[i]);
         }
     }
 

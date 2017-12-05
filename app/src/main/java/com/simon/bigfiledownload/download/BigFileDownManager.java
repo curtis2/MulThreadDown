@@ -49,7 +49,8 @@ public class BigFileDownManager implements IUrlDownListener{
     /**
      * 数据操作类
      */
-    private  BigFileDownDao fileDownDao;
+    private  BigFileDownDao dao;
+
     /**
      * 当前正在运行的任务， String 对应的是urlTask,
      */
@@ -76,13 +77,22 @@ public class BigFileDownManager implements IUrlDownListener{
 
     public BigFileDownManager() {
         executor= Executors.newFixedThreadPool(corePoolSize);
-        fileDownDao =new BigFileDownDao();
+        dao =new BigFileDownDao();
         currentTasks= getTaskFromDataBase();
     }
 
     public void addTask(@NonNull String url){
        if(TextUtils.isEmpty(url)){return;}
-       new UrlDownLoadTask(this,url);
+
+        UrlDownLoadTask task = getTaskByUrl(url);
+        if(task==null){
+            task=new UrlDownLoadTask(this,url);
+        }
+
+        //无状态或者下载错误才能重新开始
+        if(task.getmCurrentStatus()==NONE||task.getmCurrentStatus()==ERROR){
+            task.startDownload();
+        }
     }
 
 
@@ -162,7 +172,7 @@ public class BigFileDownManager implements IUrlDownListener{
 
 
     public List<UrlDownLoadTask> getTaskFromDataBase() {
-        List<FileEntity> fileEntities = fileDownDao.queryAll();
+        List<FileEntity> fileEntities = dao.queryAll();
         List<UrlDownLoadTask> tasks=new ArrayList<>();
         for(FileEntity entity:fileEntities){
             UrlDownLoadTask task=new UrlDownLoadTask(this,entity);
